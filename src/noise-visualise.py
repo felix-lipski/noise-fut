@@ -2,11 +2,11 @@
 
 from PIL import Image
 import numpy
-from mandelbrot import mandelbrot
+from noise import noise
 
-m = mandelbrot()
+m = noise()
 
-filename = "mandelbrot.png"
+filename = "noise.png"
 width = 800
 height = 600
 

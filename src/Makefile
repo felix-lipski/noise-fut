@@ -1,11 +1,11 @@
-scf4: mandelbrot.png
-	sxiv mandelbrot.png
+scf4: noise.png
+	sxiv noise.png
 
-mandelbrot.png: mandelbrot.py mandelbrot-visualise.py
-	python mandelbrot-visualise.py
+noise.png: noise.py noise-visualise.py
+	python noise-visualise.py
 
-mandelbrot.py: mandelbrot.fut
-	futhark pyopencl --library mandelbrot.fut
+noise.py: noise.fut
+	futhark pyopencl --library noise.fut
 
 clean:
-	rm mandelbrot.png
+	rm noise.png
