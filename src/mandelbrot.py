@@ -269,6 +269,9 @@ fut_opencl_src = """
 #endif
 #pragma OPENCL EXTENSION cl_khr_byte_addressable_store : enable
 
+#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+#define FUTHARK_F64_ENABLED
+
 // Some OpenCL programs dislike empty progams, or programs with no kernels.
 // Declare a dummy kernel to ensure they remain our friends.
 __kernel void dummy_kernel(__global unsigned char *dummy, int n)
@@ -3223,31 +3226,178 @@ inline int64_t atomic_xor_i64_local(volatile __local int64_t *p, int64_t x) {
 
 
 
-__kernel void builtinzhreplicate_i8zireplicate_5526(int32_t num_elems_5523,
-                                                    int8_t val_5524, __global
-                                                    unsigned char *mem_5522)
+__kernel void mainzisegmap_10005(__global int *global_failure,
+                                 int64_t screenY_9852, __global
+                                 unsigned char *mem_10094)
 {
+    #define segmap_group_sizze_10024 (mainzisegmap_group_sizze_10007)
+    
     const int block_dim0 = 0;
     const int block_dim1 = 1;
     const int block_dim2 = 2;
-    int32_t replicate_gtid_5526;
-    int32_t replicate_ltid_5527;
-    int32_t replicate_gid_5528;
     
-    replicate_gtid_5526 = get_global_id(0);
-    replicate_ltid_5527 = get_local_id(0);
-    replicate_gid_5528 = get_group_id(0);
+    if (*global_failure >= 0)
+        return;
     
-    int64_t slice_5532 = num_elems_5523;
-    int64_t rep_i_5531 = sext_i32_i64(replicate_gtid_5526);
-    int64_t remnant_5533 = sext_i32_i64(replicate_gtid_5526) - rep_i_5531;
+    int32_t global_tid_10108;
+    int32_t local_tid_10109;
+    int64_t group_sizze_10112;
+    int32_t wave_sizze_10111;
+    int32_t group_tid_10110;
     
-    if (slt64(replicate_gtid_5526, num_elems_5523)) {
-        ((__global int8_t *) mem_5522)[rep_i_5531] = val_5524;
+    global_tid_10108 = get_global_id(0);
+    local_tid_10109 = get_local_id(0);
+    group_sizze_10112 = get_local_size(0);
+    wave_sizze_10111 = LOCKSTEP_WIDTH;
+    group_tid_10110 = get_group_id(0);
+    
+    int32_t phys_tid_10005 = global_tid_10108;
+    int64_t global_tid_10113 = sext_i32_i64(group_tid_10110) *
+            segmap_group_sizze_10024 + sext_i32_i64(local_tid_10109);
+    int64_t slice_10114 = screenY_9852;
+    int64_t gtid_10004 = global_tid_10113;
+    int64_t remnant_10115 = global_tid_10113 - gtid_10004;
+    
+    if (slt64(gtid_10004, screenY_9852)) {
+        int32_t i64_res_10028 = sext_i64_i32(gtid_10004);
+        int32_t x_10029 = lshr32(i64_res_10028, 16);
+        int32_t x_10030 = i64_res_10028 ^ x_10029;
+        int32_t x_10031 = mul32(73244475, x_10030);
+        int32_t x_10032 = lshr32(x_10031, 16);
+        int32_t x_10033 = x_10031 ^ x_10032;
+        int32_t x_10034 = mul32(73244475, x_10033);
+        int32_t x_10035 = lshr32(x_10034, 16);
+        int32_t x_10036 = x_10034 ^ x_10035;
+        int32_t unsign_arg_10037 = 281253711 ^ x_10036;
+        int32_t unsign_arg_10038 = mul32(48271, unsign_arg_10037);
+        int32_t unsign_arg_10039 = umod32(unsign_arg_10038, 2147483647);
+        
+        ((__global int32_t *) mem_10094)[gtid_10004] = unsign_arg_10039;
     }
     
   error_0:
     return;
+    #undef segmap_group_sizze_10024
+}
+__kernel void mainzisegmap_9922(__global int *global_failure,
+                                int64_t screenX_9851, int64_t screenY_9852,
+                                __global unsigned char *mem_10098, __global
+                                unsigned char *mem_10103)
+{
+    #define segmap_group_sizze_10077 (mainzisegmap_group_sizze_9926)
+    
+    const int block_dim0 = 0;
+    const int block_dim1 = 1;
+    const int block_dim2 = 2;
+    
+    if (*global_failure >= 0)
+        return;
+    
+    int32_t global_tid_10126;
+    int32_t local_tid_10127;
+    int64_t group_sizze_10130;
+    int32_t wave_sizze_10129;
+    int32_t group_tid_10128;
+    
+    global_tid_10126 = get_global_id(0);
+    local_tid_10127 = get_local_id(0);
+    group_sizze_10130 = get_local_size(0);
+    wave_sizze_10129 = LOCKSTEP_WIDTH;
+    group_tid_10128 = get_group_id(0);
+    
+    int32_t phys_tid_9922 = global_tid_10126;
+    int64_t global_tid_10131 = sext_i32_i64(group_tid_10128) *
+            segmap_group_sizze_10077 + sext_i32_i64(local_tid_10127);
+    int64_t slice_10132 = (int64_t) 3;
+    int64_t slice_10133 = screenX_9851 * slice_10132;
+    int64_t slice_10134 = screenY_9852 * slice_10133;
+    int64_t gtid_9919 = squot64(global_tid_10131, slice_10133);
+    int64_t remnant_10135 = global_tid_10131 - gtid_9919 * slice_10133;
+    int64_t gtid_9920 = squot64(remnant_10135, slice_10132);
+    int64_t remnant_10136 = remnant_10135 - gtid_9920 * slice_10132;
+    int64_t gtid_9921 = remnant_10136;
+    int64_t remnant_10137 = remnant_10136 - gtid_9921;
+    
+    if ((slt64(gtid_9919, screenY_9852) && slt64(gtid_9920, screenX_9851)) &&
+        slt64(gtid_9921, (int64_t) 3)) {
+        int8_t defunc_0_f_res_10080 = ((__global
+                                        int8_t *) mem_10098)[gtid_9919 *
+                                                             screenX_9851 +
+                                                             gtid_9920];
+        
+        ((__global int8_t *) mem_10103)[gtid_9919 * ((int64_t) 3 *
+                                                     screenX_9851) + gtid_9920 *
+                                        (int64_t) 3 + gtid_9921] =
+            defunc_0_f_res_10080;
+    }
+    
+  error_0:
+    return;
+    #undef segmap_group_sizze_10077
+}
+__kernel void mainzisegmap_9941(__global int *global_failure,
+                                int64_t screenX_9851, int64_t screenY_9852,
+                                __global unsigned char *mem_10094, __global
+                                unsigned char *mem_10098)
+{
+    #define segmap_group_sizze_10047 (mainzisegmap_group_sizze_9944)
+    
+    const int block_dim0 = 0;
+    const int block_dim1 = 1;
+    const int block_dim2 = 2;
+    
+    if (*global_failure >= 0)
+        return;
+    
+    int32_t global_tid_10116;
+    int32_t local_tid_10117;
+    int64_t group_sizze_10120;
+    int32_t wave_sizze_10119;
+    int32_t group_tid_10118;
+    
+    global_tid_10116 = get_global_id(0);
+    local_tid_10117 = get_local_id(0);
+    group_sizze_10120 = get_local_size(0);
+    wave_sizze_10119 = LOCKSTEP_WIDTH;
+    group_tid_10118 = get_group_id(0);
+    
+    int32_t phys_tid_9941 = global_tid_10116;
+    int64_t global_tid_10121 = sext_i32_i64(group_tid_10118) *
+            segmap_group_sizze_10047 + sext_i32_i64(local_tid_10117);
+    int64_t slice_10122 = screenX_9851;
+    int64_t slice_10123 = screenY_9852 * slice_10122;
+    int64_t gtid_9939 = squot64(global_tid_10121, slice_10122);
+    int64_t remnant_10124 = global_tid_10121 - gtid_9939 * slice_10122;
+    int64_t gtid_9940 = remnant_10124;
+    int64_t remnant_10125 = remnant_10124 - gtid_9940;
+    
+    if (slt64(gtid_9939, screenY_9852) && slt64(gtid_9940, screenX_9851)) {
+        int32_t unsign_arg_10050 = ((__global int32_t *) mem_10094)[gtid_9939];
+        int32_t i64_res_10052 = sext_i64_i32(gtid_9940);
+        int32_t x_10053 = lshr32(i64_res_10052, 16);
+        int32_t x_10054 = i64_res_10052 ^ x_10053;
+        int32_t x_10055 = mul32(73244475, x_10054);
+        int32_t x_10056 = lshr32(x_10055, 16);
+        int32_t x_10057 = x_10055 ^ x_10056;
+        int32_t x_10058 = mul32(73244475, x_10057);
+        int32_t x_10059 = lshr32(x_10058, 16);
+        int32_t x_10060 = x_10058 ^ x_10059;
+        int32_t unsign_arg_10061 = unsign_arg_10050 ^ x_10060;
+        int32_t unsign_arg_10062 = mul32(48271, unsign_arg_10061);
+        int32_t unsign_arg_10063 = umod32(unsign_arg_10062, 2147483647);
+        double u64_res_10064 = uitofp_i32_f64(unsign_arg_10063);
+        double zs_res_10065 = u64_res_10064 / 2.147483647e9;
+        double defunc_0_f_res_10066 = 256.0 * zs_res_10065;
+        int8_t unsign_arg_10067 = fptoui_f64_i8(defunc_0_f_res_10066);
+        int8_t defunc_0_f_res_10068 = sub8(unsign_arg_10067, (int8_t) 1);
+        
+        ((__global int8_t *) mem_10098)[gtid_9939 * screenX_9851 + gtid_9940] =
+            defunc_0_f_res_10068;
+    }
+    
+  error_0:
+    return;
+    #undef segmap_group_sizze_10047
 }
 """
 # Start of values.py.
@@ -4904,8 +5054,7 @@ class Server:
 
 # End of server.py
 class mandelbrot:
-  entry_points = {"main": (["i64", "i64", "i32", "f32", "f32", "f32", "f32"],
-                           ["[][][]u8"])}
+  entry_points = {"main": (["i64", "i64"], ["[][][]u8"])}
   opaques = {}
   def __init__(self, command_queue=None, interactive=False,
                platform_pref=preferred_platform, device_pref=preferred_device,
@@ -4960,87 +5109,106 @@ class mandelbrot:
                                        default_reg_tile_size=default_reg_tile_size,
                                        default_threshold=default_threshold,
                                        size_heuristics=size_heuristics,
-                                       required_types=["i8", "i32", "i64"],
+                                       required_types=["i8", "i32", "i64", "f64"],
                                        user_sizes=sizes,
-                                       all_sizes={"builtin#replicate_i8.group_size_5529": {"class": "group_size", "value": None}})
-    self.builtinzhreplicate_i8zireplicate_5526_var = program.builtinzhreplicate_i8zireplicate_5526
+                                       all_sizes={"main.segmap_group_size_10007": {"class": "group_size", "value": None},
+                                        "main.segmap_group_size_9926": {"class": "group_size", "value": None},
+                                        "main.segmap_group_size_9944": {"class": "group_size", "value": None}})
+    self.mainzisegmap_10005_var = program.mainzisegmap_10005
+    self.mainzisegmap_9922_var = program.mainzisegmap_9922
+    self.mainzisegmap_9941_var = program.mainzisegmap_9941
     self.constants = {}
-  def futhark_builtinzhreplicate_i8(self, mem_5522, num_elems_5523, val_5524):
-    group_sizze_5529 = self.sizes["builtin#replicate_i8.group_size_5529"]
-    num_groups_5530 = sdiv_up64(num_elems_5523, group_sizze_5529)
-    if ((1 * (np.int64(num_groups_5530) * np.int64(group_sizze_5529))) != 0):
-      self.builtinzhreplicate_i8zireplicate_5526_var.set_args(np.int32(num_elems_5523),
-                                                              np.int8(val_5524),
-                                                              mem_5522)
-      cl.enqueue_nd_range_kernel(self.queue,
-                                 self.builtinzhreplicate_i8zireplicate_5526_var,
-                                 ((np.int64(num_groups_5530) * np.int64(group_sizze_5529)),),
-                                 (np.int64(group_sizze_5529),))
+  def futhark_entry_main(self, screenX_9851, screenY_9852):
+    bounds_invalid_upwards_9853 = slt64(screenY_9852, np.int64(0))
+    valid_9854 = not(bounds_invalid_upwards_9853)
+    range_valid_c_9855 = True
+    assert valid_9854, ("Error: %s%d%s%d%s%d%s\n\nBacktrace:\n-> #0  /prelude/array.fut:90:3-10\n   #1  /prelude/array.fut:195:11-16\n   #2  ../lib/github.com/diku-dk/cpprandom/random.fut:174:8-56\n   #3  mandelbrot.fut:30:14-40\n   #4  mandelbrot.fut:44:16-42\n   #5  mandelbrot.fut:40:1-44:70\n" % ("Range ",
+                                                                                                                                                                                                                                                                                                             np.int64(0),
+                                                                                                                                                                                                                                                                                                             "..",
+                                                                                                                                                                                                                                                                                                             np.int64(1),
+                                                                                                                                                                                                                                                                                                             "..<",
+                                                                                                                                                                                                                                                                                                             screenY_9852,
+                                                                                                                                                                                                                                                                                                             " is invalid."))
+    bounds_invalid_upwards_9857 = slt64(screenX_9851, np.int64(0))
+    valid_9858 = not(bounds_invalid_upwards_9857)
+    range_valid_c_9859 = True
+    assert valid_9858, ("Error: %s%d%s%d%s%d%s\n\nBacktrace:\n-> #0  /prelude/array.fut:90:3-10\n   #1  /prelude/array.fut:195:11-16\n   #2  ../lib/github.com/diku-dk/cpprandom/random.fut:174:8-56\n   #3  mandelbrot.fut:22:14-40\n   #4  mandelbrot.fut:29:15-25\n   #5  /prelude/soacs.fut:67:19-23\n   #6  /prelude/soacs.fut:67:3-37\n   #7  mandelbrot.fut:31:27-40\n   #8  mandelbrot.fut:44:16-42\n   #9  mandelbrot.fut:40:1-44:70\n" % ("Range ",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                    np.int64(0),
+                                                                                                                                                                                                                                                                                                                                                                                                                                                    "..",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                    np.int64(1),
+                                                                                                                                                                                                                                                                                                                                                                                                                                                    "..<",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                    screenX_9851,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                    " is invalid."))
+    segmap_group_sizze_10024 = self.sizes["main.segmap_group_size_10007"]
+    segmap_usable_groups_10025 = sdiv_up64(screenY_9852,
+                                           segmap_group_sizze_10024)
+    binop_y_10092 = (np.int64(4) * screenY_9852)
+    bytes_10093 = smax64(np.int64(0), binop_y_10092)
+    mem_10094 = opencl_alloc(self, bytes_10093, "mem_10094")
+    if ((1 * (np.int64(segmap_usable_groups_10025) * np.int64(segmap_group_sizze_10024))) != 0):
+      self.mainzisegmap_10005_var.set_args(self.global_failure,
+                                           np.int64(screenY_9852), mem_10094)
+      cl.enqueue_nd_range_kernel(self.queue, self.mainzisegmap_10005_var,
+                                 ((np.int64(segmap_usable_groups_10025) * np.int64(segmap_group_sizze_10024)),),
+                                 (np.int64(segmap_group_sizze_10024),))
       if synchronous:
         sync(self)
-    return ()
-  def futhark_entry_main(self, screenX_5509, screenY_5510, depth_5511,
-                         xmin_5512, ymin_5513, xmax_5514, ymax_5515):
-    binop_x_5517 = (screenX_5509 * screenY_5510)
-    binop_y_5518 = (np.int64(3) * binop_x_5517)
-    bytes_5519 = smax64(np.int64(0), binop_y_5518)
-    mem_5520 = opencl_alloc(self, bytes_5519, "mem_5520")
-    self.futhark_builtinzhreplicate_i8(mem_5520,
-                                       ((screenY_5510 * screenX_5509) * np.int64(3)),
-                                       np.int8(127))
-    mem_out_5521 = mem_5520
-    return mem_out_5521
-  def main(self, screenX_5509_ext, screenY_5510_ext, depth_5511_ext,
-           xmin_5512_ext, ymin_5513_ext, xmax_5514_ext, ymax_5515_ext):
+    nest_sizze_10046 = (screenX_9851 * screenY_9852)
+    segmap_group_sizze_10047 = self.sizes["main.segmap_group_size_9944"]
+    segmap_usable_groups_10048 = sdiv_up64(nest_sizze_10046,
+                                           segmap_group_sizze_10047)
+    bytes_10097 = smax64(np.int64(0), nest_sizze_10046)
+    mem_10098 = opencl_alloc(self, bytes_10097, "mem_10098")
+    if ((1 * (np.int64(segmap_usable_groups_10048) * np.int64(segmap_group_sizze_10047))) != 0):
+      self.mainzisegmap_9941_var.set_args(self.global_failure,
+                                          np.int64(screenX_9851),
+                                          np.int64(screenY_9852), mem_10094,
+                                          mem_10098)
+      cl.enqueue_nd_range_kernel(self.queue, self.mainzisegmap_9941_var,
+                                 ((np.int64(segmap_usable_groups_10048) * np.int64(segmap_group_sizze_10047)),),
+                                 (np.int64(segmap_group_sizze_10047),))
+      if synchronous:
+        sync(self)
+    mem_10094 = None
+    y_10075 = (np.int64(3) * screenX_9851)
+    nest_sizze_10076 = (screenY_9852 * y_10075)
+    segmap_group_sizze_10077 = self.sizes["main.segmap_group_size_9926"]
+    segmap_usable_groups_10078 = sdiv_up64(nest_sizze_10076,
+                                           segmap_group_sizze_10077)
+    binop_y_10101 = (np.int64(3) * nest_sizze_10046)
+    bytes_10102 = smax64(np.int64(0), binop_y_10101)
+    mem_10103 = opencl_alloc(self, bytes_10102, "mem_10103")
+    if ((1 * (np.int64(segmap_usable_groups_10078) * np.int64(segmap_group_sizze_10077))) != 0):
+      self.mainzisegmap_9922_var.set_args(self.global_failure,
+                                          np.int64(screenX_9851),
+                                          np.int64(screenY_9852), mem_10098,
+                                          mem_10103)
+      cl.enqueue_nd_range_kernel(self.queue, self.mainzisegmap_9922_var,
+                                 ((np.int64(segmap_usable_groups_10078) * np.int64(segmap_group_sizze_10077)),),
+                                 (np.int64(segmap_group_sizze_10077),))
+      if synchronous:
+        sync(self)
+    mem_10098 = None
+    mem_out_10107 = mem_10103
+    return mem_out_10107
+  def main(self, screenX_9851_ext, screenY_9852_ext):
     try:
-      screenX_5509 = np.int64(ct.c_int64(screenX_5509_ext))
+      screenX_9851 = np.int64(ct.c_int64(screenX_9851_ext))
     except (TypeError, AssertionError) as e:
       raise TypeError("Argument #0 has invalid value\nFuthark type: {}\nArgument has Python type {} and value: {}\n".format("i64",
-                                                                                                                            type(screenX_5509_ext),
-                                                                                                                            screenX_5509_ext))
+                                                                                                                            type(screenX_9851_ext),
+                                                                                                                            screenX_9851_ext))
     try:
-      screenY_5510 = np.int64(ct.c_int64(screenY_5510_ext))
+      screenY_9852 = np.int64(ct.c_int64(screenY_9852_ext))
     except (TypeError, AssertionError) as e:
       raise TypeError("Argument #1 has invalid value\nFuthark type: {}\nArgument has Python type {} and value: {}\n".format("i64",
-                                                                                                                            type(screenY_5510_ext),
-                                                                                                                            screenY_5510_ext))
-    try:
-      depth_5511 = np.int32(depth_5511_ext)
-    except (TypeError, AssertionError) as e:
-      raise TypeError("Argument #2 has invalid value\nFuthark type: {}\nArgument has Python type {} and value: {}\n".format("i32",
-                                                                                                                            type(depth_5511_ext),
-                                                                                                                            depth_5511_ext))
-    try:
-      xmin_5512 = np.float32(xmin_5512_ext)
-    except (TypeError, AssertionError) as e:
-      raise TypeError("Argument #3 has invalid value\nFuthark type: {}\nArgument has Python type {} and value: {}\n".format("f32",
-                                                                                                                            type(xmin_5512_ext),
-                                                                                                                            xmin_5512_ext))
-    try:
-      ymin_5513 = np.float32(ymin_5513_ext)
-    except (TypeError, AssertionError) as e:
-      raise TypeError("Argument #4 has invalid value\nFuthark type: {}\nArgument has Python type {} and value: {}\n".format("f32",
-                                                                                                                            type(ymin_5513_ext),
-                                                                                                                            ymin_5513_ext))
-    try:
-      xmax_5514 = np.float32(xmax_5514_ext)
-    except (TypeError, AssertionError) as e:
-      raise TypeError("Argument #5 has invalid value\nFuthark type: {}\nArgument has Python type {} and value: {}\n".format("f32",
-                                                                                                                            type(xmax_5514_ext),
-                                                                                                                            xmax_5514_ext))
-    try:
-      ymax_5515 = np.float32(ymax_5515_ext)
-    except (TypeError, AssertionError) as e:
-      raise TypeError("Argument #6 has invalid value\nFuthark type: {}\nArgument has Python type {} and value: {}\n".format("f32",
-                                                                                                                            type(ymax_5515_ext),
-                                                                                                                            ymax_5515_ext))
+                                                                                                                            type(screenY_9852_ext),
+                                                                                                                            screenY_9852_ext))
     time_start = time.time()
     with np.errstate(divide="ignore", over="ignore", under="ignore",
                      invalid="ignore"):
-      mem_out_5521 = self.futhark_entry_main(screenX_5509, screenY_5510,
-                                             depth_5511, xmin_5512, ymin_5513,
-                                             xmax_5514, ymax_5515)
+      mem_out_10107 = self.futhark_entry_main(screenX_9851, screenY_9852)
     runtime = (int((time.time() * 1000000)) - int((time_start * 1000000)))
     sync(self)
-    return cl.array.Array(self.queue, (screenY_5510, screenX_5509, np.int64(3)),
-                          np.uint8, data=mem_out_5521)
+    return cl.array.Array(self.queue, (screenY_9852, screenX_9851, np.int64(3)),
+                          np.uint8, data=mem_out_10107)
