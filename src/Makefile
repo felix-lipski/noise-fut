@@ -7,5 +7,8 @@ noise.png: noise.py noise-visualise.py
 noise.py: noise.fut
 	futhark pyopencl --library noise.fut
 
+scf5: 
+	alacritty --hold --command futhark repl
+
 clean:
 	rm noise.png
