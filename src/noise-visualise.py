@@ -7,9 +7,10 @@ from noise import noise
 m = noise()
 
 filename = "noise.png"
-width = 1024
-height = 1024
+width = 512
+# width = 1024
+# width = 2048
 
-fut_image = m.main(width, height).get()
+fut_image = m.main(width).get()
 img = Image.fromarray(fut_image)
 img.save(filename)
