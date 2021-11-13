@@ -47,9 +47,9 @@ let smooth_noise_2d rng (lenX: i64) (period: i64) (octave: i64): (minstd_rand.rn
     |> map foo) :> [lenX][lenX]f64 
   in (rng_ret, ret)
 
-let collapse_octaves [octaves] (os: [octaves]f64): f64 = 
-  zip os (iota octaves) 
-  |> map (\(o,i) -> o / 2**(f64.i64 i)) |> reduce (+) 0.0f64
+let collapse_octaves [octaves] (os: [octaves]f64): f64 = (iota octaves) 
+  |> map2 (\o -> \i -> o / 2**(f64.i64 i)) os 
+  |> reduce (+) 0.0f64
 
 let perlin_octaves_1d rng (lenX: i64) (period: i64) (octaves: i64): (minstd_rand.rng, [lenX][octaves]f64) =
   let (rngs, ys) = minstd_rand.split_rng octaves rng
