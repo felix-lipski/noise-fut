@@ -4,15 +4,16 @@ module dist = uniform_real_distribution f64 minstd_rand
 
 let noise_1d rng (amp: f64) (n: i64): (minstd_rand.rng, [n]f64) =
   let xs = (iota n)
-  let f r _ = (dist.rand (-amp,amp) r)
+  let f r _ = (dist.rand (0,amp) r)
+  -- let f r _ = (dist.rand (-amp,amp) r)
   let rngs = minstd_rand.split_rng n rng
   let (rngs, ys) = unzip (map2 f rngs xs)
   let rng = minstd_rand.join_rng rngs
   in (rng, ys)
 
-let noise_2d rng (n: i64) (m: i64): (minstd_rand.rng, [n][m]f64) =
+let noise_2d rng (amp: f64) (n: i64) (m: i64): (minstd_rand.rng, [n][m]f64) =
   let xs = (iota n)
-  let f r _ = noise_1d r 1.0 m
+  let f r _ = noise_1d r amp m
   let rngs = minstd_rand.split_rng n rng
   let (rngs, ys) = unzip (map2 f rngs xs)
   let rng = minstd_rand.join_rng rngs
@@ -34,7 +35,7 @@ let smooth_noise_1d rng (lenX: i64) (period: i64) (octave: i64): (minstd_rand.rn
 let smooth_noise_2d rng (lenX: i64) (period: i64) (octave: i64): (minstd_rand.rng, [lenX][lenX]f64) = 
   let strech = 2 ** octave |> (period /)
   let strechF: f64 = f64.i64 strech
-  let (rng_ret, noise) = (noise_2d rng (lenX/strech) (lenX/strech))
+  let (rng_ret, noise) = (noise_2d rng (1.0 / 2**(f64.i64 octave)) (lenX/strech) (lenX/strech))
   let lerp (a,b) i = f64.i64 i 
                        |> flip (/) strechF 
                        |> f64.lerp a b
@@ -61,13 +62,15 @@ let perlin_octaves_1d rng (lenX: i64) (period: i64) (octaves: i64): (minstd_rand
     |> reduce (map2 (+)) (replicate lenX 0.0f64)
   in (rng, ys)
   
-let perlin_octaves_2d rng (lenX: i64) (period: i64) (octaves: i64): (minstd_rand.rng, [lenX][lenX][octaves]f64) =
+let perlin_octaves_2d rng (lenX: i64) (period: i64) (octaves: i64): (minstd_rand.rng, [lenX][lenX]f64) =
   let (rngs, ys) = minstd_rand.split_rng octaves rng
     |> zip (iota octaves)
     |> map (\(o,r) -> smooth_noise_2d r lenX period o) 
     |> unzip
   let rng = minstd_rand.join_rng rngs
-  in (rng, transpose ys |> map transpose)
+  let ys = ys 
+    |> reduce (map2 (map2 (+))) (replicate lenX (replicate lenX 0.0f64))
+  in (rng, ys)
 
 -- MAIN
 
@@ -86,9 +89,10 @@ let main (lenX: i64): [lenX][lenX][3]u8 =
   let rng = minstd_rand.rng_from_seed [2]
   let noise1d = (perlin_octaves_1d rng lenX 32 6).1
   -- let noise2d = ((perlin_octaves_2d rng lenX 128 2).1)[0]
-  let noise2d = map (map collapse_octaves) (perlin_octaves_2d rng lenX 32 5).1
+  let noise2d = (perlin_octaves_2d rng lenX 32 5).1
+  -- let noise2d = map (map collapse_octaves) (perlin_octaves_2d rng lenX 32 5).1
   -- let noise2d = map (map (\_ -> 0.5)) (perlin_octaves_2d rng lenX 32 5).1
-  in graph2d lenX noise1d |> f64_lum_to_u8_rgb_arr
+  -- in graph2d lenX noise1d |> f64_lum_to_u8_rgb_arr
   -- in (smooth_noise_2d rng lenX 128 1).1
-  -- in noise2d |> f64_lum_to_u8_rgb_arr
+  in noise2d |> f64_lum_to_u8_rgb_arr
 
