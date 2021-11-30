@@ -96,3 +96,29 @@ let main (lenX: i64): [lenX][lenX][3]u8 =
   -- in (smooth_noise_2d rng lenX 128 1).1
   in noise2d |> f64_lum_to_u8_rgb_arr
 
+entry vectorAdd [i] (a: [i]f32) (b: [i]f32) : [i]f32 = map2 (+) a b
+entry vectorSub [i] (a: [i]f32) (b: [i]f32) : [i]f32 = map2 (-) a b
+entry vectorMul [i] (a: [i]f32) (b: [i]f32) : [i]f32 = map2 (*) a b
+entry vectorAbs = map f32.abs
+entry vectorSgn = map f32.sgn 
+entry scaleV (f: f32) = map (*f)
+
+entry matrixAdd [i] [j] (A: [i][j]f32) (B: [i][j]f32) : [i][j]f32 = map2 vectorAdd A B 
+entry matrixSub [i] [j] (A: [i][j]f32) (B: [i][j]f32) : [i][j]f32 = map2 vectorSub A B 
+entry matrixMul [i] [j] (A: [i][j]f32) (B: [i][j]f32) : [i][j]f32 = map2 vectorMul A B 
+entry matrixAbs = map vectorAbs
+entry matrixSgn = map vectorSgn
+entry scaleM f = map (scaleV f)
+
+entry dot [i] (a: [i]f32) (b: [i]f32) : f32 = reduce (+) 0 <| vectorMul a b
+
+entry vectorNorm v = f32.sqrt <| dot v v
+entry normalizeV v = let f = 1/vectorNorm v in scaleV f v
+
+entry matrixVectorMul [i] [j] (M: [i][j]f32) (v: []f32) = map (dot v) M
+entry vectorMatrixMul [i] [j] (v: [i]f32) (M: [i][j]f32) = map (dot v) <| transpose M
+entry matrixMatrixMul [i] [j] [k] (A: [i][j]f32) (B: [j][k]f32) : [i][k]f32 = map (\a -> map (dot a) <| transpose B) A
+
+
+
+

@@ -1,6 +1,10 @@
 { pkgs ? import <nixpkgs> { } }:
 with pkgs;
 let
+  customGhc = haskellPackages.ghcWithPackages (pkgs: with pkgs; [
+    lens
+    futhask
+  ]);
   customPython = pkgs.python39.buildEnv.override {
     extraLibs = with pkgs.python39Packages; [
       numpy
@@ -10,6 +14,7 @@ let
   };
 in
 [ customPython ] ++ 
+[ customGhc ] ++ 
 [
   futhark
 
